@@ -1,110 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Schedule Your Dumpster</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-    }
-    .form-container {
-      max-width: 600px;
-      margin: auto;
-      background-color: rgba(1, 176, 187, 0.05);
-      border: 1px solid rgba(1, 176, 187, 0.3);
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
-      padding: 24px;
-    }
-    h2 {
-      text-align: center;
-      color: #01b0bb;
-    }
-    label {
-      color: #01b0bb;
-      margin-bottom: 4px;
-      display: block;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(1, 176, 187, 0.4);
-      border-radius: 8px;
-      background-color: rgba(1, 176, 187, 0.05);
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      background-color: #01b0bb;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Schedule Your Dumpster</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: rgba(1, 176, 187, 0.05);
+            border: 1px solid rgba(1, 176, 187, 0.3);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
+            padding: 24px;
+        }
+        h2 {
+            text-align: center;
+            color: #01b0bb;
+        }
+        label {
+            color: #01b0bb;
+            margin-bottom: 4px;
+            display: block;
+        }
+        /* Style for flatpickr input */
+        input.flatpickr-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(1, 176, 187, 0.4);
+            border-radius: 8px;
+            background-color: rgba(1, 176, 187, 0.05);
+        }
+        /* General input style for other inputs */
+        input:not(.flatpickr-input) {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(1, 176, 187, 0.4);
+            border-radius: 8px;
+            background-color: rgba(1, 176, 187, 0.05);
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            background-color: #01b0bb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #008c96; /* Slightly darker shade on hover */
+        }
+        #responseMessage {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+    </style>
 </head>
 <body>
 
 <div class="form-container">
-  <h2>Schedule Now</h2>
-  <form id="bookingForm">
-    <label for="name">Your Name</label>
-    <input type="text" id="name" required>
+    <h2>Schedule Now</h2>
+    <form id="bookingForm">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" required>
 
-    <label for="email">Your Email</label>
-    <input type="email" id="email" required>
+        <label for="email">Your Email</label>
+        <input type="email" id="email" required>
 
-    <label for="deliveryDate">Delivery Date</label>
-    <input type="date" id="deliveryDate" required>
+        <label for="deliveryDate">Delivery Date</label>
+        <input type="text" id="deliveryDate" placeholder="Select Delivery Date" required>
 
-    <label for="pickupDate">Pickup Date</label>
-    <input type="date" id="pickupDate" required>
+        <label for="deliveryTime">Preferred Delivery Time</label>
+        <input type="time" id="deliveryTime" required>
 
-    <button type="submit">Submit and Confirm</button>
-  </form>
+        <label for="pickupDate">Pickup Date</label>
+        <input type="date" id="pickupDate" required>
+
+        <button type="submit">Submit and Confirm</button>
+    </form>
+    <div id="responseMessage"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-  const form = document.getElementById('bookingForm');
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const data = {
-      name: document.getElementById('name').value,
-      email: document.getElementById('email').value,
-      delivery_date: document.getElementById('deliveryDate').value,
-      pickup_date: document.getElementById('pickupDate').value
-    };
+    // --- IMPORTANT: REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL ---
+    // This URL must end with '/exec' for stable, public access.
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzy7ED2spmR176SGn61SP0GMEdae7RdwljWz9YuDndx5-ZRZ-VGavMOmD70Ne_eGkRHuA/exec';
 
-    fetch("https://script.google.com/macros/s/AKfycbwM0RG4koegi1kjAEF93LhM576zen83GrjKuS01uqrwht2kf-F18mLWbIdttznDdWfRKw/exec", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(res => {
-      if (res.status === "booked") {
-        alert("Booking confirmed!");
-        form.reset();
-      } else if (res.status === "full") {
-        alert("Sorry, all dumpsters are booked for that day.");
-      } else {
-        alert("Unexpected response from server.");
-      }
-    })
-    .catch(error => {
-      alert("Error sending booking: " + error.message);
-      console.error("Booking Error:", error);
+    const form = document.getElementById('bookingForm');
+    const responseMessageDiv = document.getElementById('responseMessage');
+
+    // Initialize flatpickr for Delivery Date
+    flatpickr("#deliveryDate", {
+        dateFormat: "Y-m-d", // Format matching your Apps Script expectation
+        minDate: "today",    // Don't allow past dates
+        // You would add logic here to disable specific dates if you had an API endpoint
+        // Example if you had disabled dates:
+        // disable: ["2025-05-28", "2025-06-15"],
+        // onReady: function(selectedDates, dateStr, instance) {
+        //     // This is where you'd fetch booked dates from Apps Script and update the calendar
+        //     // For now, it's just a placeholder for future enhancement
+        // }
     });
-  });
+
+
+    // Helper function to display messages to the user
+    function displayMessage(message, type) {
+        responseMessageDiv.textContent = message;
+        responseMessageDiv.className = type; // Add a class for styling (success, error, warning)
+        responseMessageDiv.style.display = 'block'; // Make the div visible
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+
+        // Clear any previous messages
+        responseMessageDiv.style.display = 'none';
+        responseMessageDiv.className = '';
+        responseMessageDiv.textContent = '';
+        
+        // Collect data from form fields.
+        const data = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            // flatpickr will ensure deliveryDate is in YYYY-MM-DD format
+            delivery_date: document.getElementById('deliveryDate').value,
+            time: document.getElementById('deliveryTime').value,
+            pickupDate: document.getElementById('pickupDate').value // Currently not used by Apps Script
+        };
+
+        // Send data to Google Apps Script using fetch
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(responseData => {
+            if (responseData.status === "booked") {
+                displayMessage(responseData.message || "Booking submitted! We’ll confirm shortly.", "success");
+                form.reset(); // Clear the form on successful booking
+            } else if (responseData.status === "full") { // This status would only appear if you re-implement booking limit
+                displayMessage(responseData.message || "Sorry, this date is fully booked.", "warning");
+            } else if (responseData.status === "error") {
+                displayMessage(responseData.message || "An error occurred during booking. Please try again.", "error");
+            } else {
+                displayMessage("Unexpected response from server. Status: " + JSON.stringify(responseData), "error");
+            }
+        })
+        .catch(error => {
+            console.error("Fetch Error:", error);
+            displayMessage("Could not connect to the server or an error occurred: " + error.message, "error");
+        });
+    });
 </script>
 
 </body>
