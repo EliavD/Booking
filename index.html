@@ -91,8 +91,17 @@
       <div id="dateRangePicker"></div>
     </div>
 
-    <label for="time">Preferred Drop-off Time (2-hour window)</label>
-    <input type="time" id="time" min="07:00" max="21:00" step="900" required>
+    <label for="time">Preferred Drop-off Time</label>
+    <select id="time" required>
+      <option value="">Select a 2-hour window</option>
+      <option value="07:00">7:00 AM – 9:00 AM</option>
+      <option value="09:00">9:00 AM – 11:00 AM</option>
+      <option value="11:00">11:00 AM – 1:00 PM</option>
+      <option value="13:00">1:00 PM – 3:00 PM</option>
+      <option value="15:00">3:00 PM – 5:00 PM</option>
+      <option value="17:00">5:00 PM – 7:00 PM</option>
+      <option value="19:00">7:00 PM – 9:00 PM</option>
+    </select>
 
     <button type="submit">Submit and Confirm</button>
   </form>
@@ -128,7 +137,7 @@
     }
 
     if (!time) {
-      alert("Please select a preferred drop-off time.");
+      alert("Please select a preferred drop-off time window.");
       return;
     }
 
