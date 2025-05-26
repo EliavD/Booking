@@ -33,7 +33,7 @@
       display: block;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 10px;
       margin-bottom: 16px;
@@ -91,6 +91,9 @@
       <div id="dateRangePicker"></div>
     </div>
 
+    <label for="time">Preferred Drop-off Time (2-hour window)</label>
+    <input type="time" id="time" min="07:00" max="21:00" step="900" required>
+
     <button type="submit">Submit and Confirm</button>
   </form>
 </div>
@@ -117,8 +120,15 @@
   form.addEventListener('submit', function(e) {
     e.preventDefault();
 
+    const time = document.getElementById('time').value;
+
     if (!deliveryDate || !pickupDate) {
       alert("Please select both delivery and pickup dates.");
+      return;
+    }
+
+    if (!time) {
+      alert("Please select a preferred drop-off time.");
       return;
     }
 
@@ -126,7 +136,8 @@
       name: document.getElementById('name').value,
       email: document.getElementById('email').value,
       delivery_date: deliveryDate,
-      pickup_date: pickupDate
+      pickup_date: pickupDate,
+      time: time
     };
 
     fetch("https://script.google.com/macros/s/AKfycbwM0RG4koegi1kjAEF93LhM576zen83GrjKuS01uqrwht2kf-F18mLWbIdttznDdWfRKw/exec", {
@@ -158,4 +169,3 @@
 
 </body>
 </html>
-
