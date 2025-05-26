@@ -91,9 +91,9 @@
       <div id="dateRangePicker"></div>
     </div>
 
-    <label for="time">Preferred Drop-off Time</label>
-    <select id="time" required>
-      <option value="">Select a 2-hour window</option>
+    <label for="timeSlot">Select Drop-Off Time Slot</label>
+    <select id="timeSlot" required>
+      <option value="" disabled selected>Select a 2-hour window</option>
       <option value="07:00">7:00 AM – 9:00 AM</option>
       <option value="09:00">9:00 AM – 11:00 AM</option>
       <option value="11:00">11:00 AM – 1:00 PM</option>
@@ -129,7 +129,7 @@
   form.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const time = document.getElementById('time').value;
+    const time = document.getElementById('timeSlot').value;
 
     if (!deliveryDate || !pickupDate) {
       alert("Please select both delivery and pickup dates.");
@@ -137,7 +137,7 @@
     }
 
     if (!time) {
-      alert("Please select a preferred drop-off time window.");
+      alert("Please select a delivery time slot.");
       return;
     }
 
@@ -159,10 +159,8 @@
     .then(res => res.json())
     .then(res => {
       if (res.status === "booked") {
-        alert("Booking confirmed!");
-        form.reset();
-        deliveryDate = "";
-        pickupDate = "";
+        alert("Booking confirmed! Redirecting to payment...");
+        window.location.href = "https://square.link/u/hjhYelu2";
       } else if (res.status === "full") {
         alert("Sorry, all dumpsters are booked for that day.");
       } else {
@@ -175,6 +173,10 @@
     });
   });
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
