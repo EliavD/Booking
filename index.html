@@ -42,6 +42,16 @@
       background-color: rgba(1, 176, 187, 0.05);
     }
 
+    #deliveryDate {
+      display: none;
+    }
+
+    #deliveryCalendar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
     button {
       width: 100%;
       padding: 14px;
@@ -72,8 +82,9 @@
     <label for="email">Your Email</label>
     <input type="email" id="email" required>
 
-    <label for="deliveryDate">Delivery Date</label>
-    <input type="text" id="deliveryDate" required placeholder="Select delivery date">
+    <label>Delivery Date</label>
+    <input type="text" id="deliveryDate">
+    <div id="deliveryCalendar"></div>
 
     <label for="pickupDate">Pickup Date</label>
     <input type="text" id="pickupDate" required placeholder="Select pickup date">
@@ -84,10 +95,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-  // Initialize calendar pickers
-  flatpickr("#deliveryDate", {
+  let selectedDeliveryDate = "";
+
+  flatpickr("#deliveryCalendar", {
+    inline: true,
     minDate: "today",
-    dateFormat: "Y-m-d"
+    dateFormat: "Y-m-d",
+    onChange: function(selectedDates, dateStr) {
+      selectedDeliveryDate = dateStr;
+    }
   });
 
   flatpickr("#pickupDate", {
@@ -95,15 +111,19 @@
     dateFormat: "Y-m-d"
   });
 
-  // Form submission
   const form = document.getElementById('bookingForm');
   form.addEventListener('submit', function(e) {
     e.preventDefault();
 
+    if (!selectedDeliveryDate) {
+      alert("Please select a delivery date.");
+      return;
+    }
+
     const data = {
       name: document.getElementById('name').value,
       email: document.getElementById('email').value,
-      delivery_date: document.getElementById('deliveryDate').value,
+      delivery_date: selectedDeliveryDate,
       pickup_date: document.getElementById('pickupDate').value
     };
 
@@ -119,6 +139,7 @@
       if (res.status === "booked") {
         alert("Booking confirmed!");
         form.reset();
+        selectedDeliveryDate = ""; // reset after success
       } else if (res.status === "full") {
         alert("Sorry, all dumpsters are booked for that day.");
       } else {
