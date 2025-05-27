@@ -196,7 +196,9 @@
         
         // Clear any previous error messages
         const statusDiv = document.getElementById('statusMessage');
-        statusDiv.style.display = 'none';
+        if (statusDiv.style.display !== 'none') {
+          statusDiv.style.display = 'none';
+        }
       }
     }
   });
@@ -252,8 +254,8 @@
 
     debugLog("Sending data to server", data);
 
- https://script.google.com/macros/s/AKfycbxRz70_qstnXJFE0sD3cNAj5k0gkMfPzlFaH5-W7tKl3_3BkaQNL6KpEbIEomRKrLocxQ/exec
-    const scriptUrl = "PASTE_YOUR_NEW_SCRIPT_URL_HERE";
+    // Updated Google Apps Script URL
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxRz70_qstnXJFE0sD3cNAj5k0gkMfPzlFaH5-W7tKl3_3BkaQNL6KpEbIEomRKrLocxQ/exec";
 
     fetch(scriptUrl, {
       method: "POST",
