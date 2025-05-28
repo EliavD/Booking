@@ -11,7 +11,6 @@
       margin: 0;
       padding: 20px;
     }
-
     .form-container {
       max-width: 600px;
       margin: auto;
@@ -21,18 +20,15 @@
       box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
       padding: 24px;
     }
-
     h2 {
       text-align: center;
       color: #01b0bb;
     }
-
     label {
       color: #01b0bb;
       margin-bottom: 4px;
       display: block;
     }
-
     input, select {
       width: 100%;
       padding: 10px;
@@ -42,17 +38,14 @@
       background-color: rgba(1, 176, 187, 0.05);
       box-sizing: border-box;
     }
-
     #dateRangeWrapper {
       display: flex;
       justify-content: center;
       margin: 24px 0;
     }
-
     .flatpickr-calendar {
       width: 100% !important;
     }
-
     button {
       width: 100%;
       padding: 14px;
@@ -64,22 +57,18 @@
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
     }
-
     button:hover {
       background-color: #019aa3;
     }
-
     button:disabled {
       background-color: #ccc;
       cursor: not-allowed;
     }
-
     .flatpickr-day.selected {
       background: #01b0bb !important;
       color: white !important;
       border-radius: 8px !important;
     }
-
     .status-message {
       padding: 12px;
       margin: 16px 0;
@@ -87,13 +76,11 @@
       text-align: center;
       display: none;
     }
-
     .status-success {
       background-color: #d4edda;
       color: #155724;
       border: 1px solid #c3e6cb;
     }
-
     .status-error {
       background-color: #f8d7da;
       color: #721c24;
@@ -142,31 +129,54 @@
   let pickupDate = "";
   let unavailableDates = [];
 
-  const scriptUrl = "https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec";
+  // Replace with your backend endpoint URL
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbyGSvTfRmIlNIf94VnXCQyxhfPlovXW7GXiV6stDGF62dfz2mycCeQGLFNgoxYot4nQdA/exec";
 
   function showStatus(message, type = 'error') {
     const statusDiv = document.getElementById('statusMessage');
     statusDiv.textContent = message;
     statusDiv.className = `status-message status-${type}`;
     statusDiv.style.display = 'block';
-    if (type === 'success') setTimeout(() => statusDiv.style.display = 'none', 5000);
+
+    if (type === 'success') {
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 5000);
+    }
   }
 
+  // Fetch the unavailable (fully booked) dates from the backend
   function fetchUnavailableDates() {
     const today = new Date();
     const start = today.toISOString().split("T")[0];
-    const end = new Date(today.setMonth(today.getMonth() + 1)).toISOString().split("T")[0];
+    // Get dates for the next month
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const end = nextMonth.toISOString().split("T")[0];
 
-    fetch(`${scriptUrl}?start=${start}&end=${end}`)
-      .then(res => res.json())
+    const urlWithParams = `${scriptUrl}?start=${start}&end=${end}`;
+    console.log("Fetching unavailable dates from:", urlWithParams);
+
+    fetch(urlWithParams)
+      .then(res => {
+        console.log("Fetch response status:", res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log("Data returned from backend:", data);
         if (data.status === "ok" && Array.isArray(data.dates)) {
           unavailableDates = data.dates;
-          calendar.set("disable", unavailableDates.map(date => new Date(date)));
+          // Convert to Date objects and disable those dates in flatpickr
+          const disableDates = unavailableDates.map(dateStr => new Date(dateStr));
+          calendar.set("disable", disableDates);
+          calendar.redraw();
+          console.log("Disabled dates applied:", disableDates);
         }
-      });
+      })
+      .catch(err => console.error("Error fetching unavailable dates:", err));
   }
 
+  // Initialize flatpickr with disabled dates
   const calendar = flatpickr("#dateRangePicker", {
     mode: "range",
     inline: true,
@@ -177,10 +187,14 @@
         deliveryDate = selectedDates[0].toISOString().split('T')[0];
         pickupDate = selectedDates[1].toISOString().split('T')[0];
 
-        if (unavailableDates.some(date => {
-          const d = new Date(date).getTime();
-          return selectedDates.some(sel => sel.getTime() === d);
-        })) {
+        // Check if any of the selected dates are unavailable
+        const selectedUnavailable = selectedDates.filter(selDate => {
+          return unavailableDates.some(dateStr => {
+            // Compare by converting both dates to the same date string
+            return new Date(dateStr).toISOString().split('T')[0] === selDate.toISOString().split('T')[0];
+          });
+        });
+        if (selectedUnavailable.length > 0) {
           showStatus("One or more selected dates are unavailable. Please choose different dates.");
           calendar.clear();
           deliveryDate = "";
@@ -189,6 +203,7 @@
       }
     },
     onReady: function() {
+      // Fetch and set unavailable dates when the calendar is ready
       fetchUnavailableDates();
     }
   });
@@ -227,7 +242,9 @@
         setTimeout(() => window.location.href = "https://square.link/u/hjhYelu2", 2000);
       }
     })
-    .catch(() => showStatus("Submission failed. Please try again later."))
+    .catch(() => {
+      showStatus("Submission failed. Please try again later.");
+    })
     .finally(() => resetSubmitButton());
   });
 
@@ -239,3 +256,4 @@
 
 </body>
 </html>
+
