@@ -46,11 +46,11 @@
     #dateRangeWrapper {
       display: flex;
       justify-content: center;
-      margin: 24px 0;
+      margin: 16px 0;
     }
 
     #dateRangePicker {
-      display: inline-block;
+      max-width: 100%;
     }
 
     button {
@@ -194,22 +194,32 @@
     }
 
     const data = { name, email, delivery_date: deliveryDate, pickup_date: pickupDate, time };
-
     const scriptUrl = "https://script.google.com/macros/s/AKfycbxAfDB7tApaY5Lo5rCliUVg5SyKwjRwrUdg-KGXomPha5eDyY9RG9EdBlra6i-qhQznLA/exec";
 
     fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      mode: 'no-cors'
+      body: JSON.stringify(data)
     })
-    .then(() => {
-      showStatus("Booking submitted! Redirecting to payment...", 'success');
-      setTimeout(() => {
-        window.location.href = "https://square.link/u/hjhYelu2";
-      }, 2000);
+    .then(response => response.json())
+    .then(responseData => {
+      debugLog("Response:", responseData);
+
+      if (responseData.status === "conflict") {
+        showStatus("That time slot is already booked. Please choose another.");
+        resetSubmitButton();
+      } else if (responseData.status === "booked") {
+        showStatus("Booking submitted! Redirecting to payment...", 'success');
+        setTimeout(() => {
+          window.location.href = "https://square.link/u/hjhYelu2";
+        }, 2000);
+      } else {
+        showStatus("Something went wrong. Please try again.");
+        resetSubmitButton();
+      }
     })
     .catch(error => {
+      console.error("Error:", error);
       showStatus("Submission failed. Please try again later.");
       resetSubmitButton();
     });
