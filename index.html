@@ -5,6 +5,7 @@
   <title>Schedule Your Dumpster</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
+    /* Your CSS styles remain the same */
     body {
       font-family: Arial, sans-serif;
       background: #f9f9f9;
@@ -129,8 +130,13 @@
   let pickupDate = "";
   let unavailableDates = [];
 
+  // **IMPORTANT: Ensure this URL EXACTLY matches your deployed Google Apps Script Web App URL**
+  // Your provided URL from the error: https://script.google.com/macros/s/AKfycbwFmRirj5DzV1QfN1o-6fFV_7NAAYylz3tchCtSXyD6u7RMFYQzIuAap_WcyPA3YNetFQ/exec
+  // Your script tag URL: https://script.google.com/macros/s/AKfycbz91N8zScaHhPBAuf4Ac-Bkd66qmGPCjpa185twN2_fyg0_pT5gQHKa6BFuZJ3PM4cHMg/exec
+  // Please pick the correct one. I'll use the one from your error message for consistency with previous debugging,
+  // but if you have a new deployment, use that one.
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbwFmRirj5DzV1QfN1o-6fFV_7NAAYylz3tchCtSXyD6u7RMFYQzIuAap_WcyPA3YNetFQ/exec";
 
-  const scriptUrl = "https://script.google.com/macros/s/AKfycbz91N8zScaHhPBAuf4Ac-Bkd66qmGPCjpa185twN2_fyg0_pT5gQHKa6BFuZJ3PM4cHMg/exec";
 
   function showStatus(message, type = 'error') {
     const statusDiv = document.getElementById('statusMessage');
@@ -149,7 +155,7 @@
   function fetchUnavailableDates() {
     const today = new Date();
     const start = today.toISOString().split("T")[0];
-    // Get dates for the next month
+    // Get dates for the next month (adjust range as needed)
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     const end = nextMonth.toISOString().split("T")[0];
@@ -160,20 +166,30 @@
     fetch(urlWithParams)
       .then(res => {
         console.log("Fetch response status:", res.status);
+        if (!res.ok) { // Check for HTTP errors (e.g., 404, 500)
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
         return res.json();
       })
       .then(data => {
         console.log("Data returned from backend:", data);
-        if (data.status === "ok" && Array.isArray(data.dates)) {
-          unavailableDates = data.dates;
+        // *** CRITICAL CHANGE: Check for 'unavailable_dates' property ***
+        if (data.status === "success" && Array.isArray(data.unavailable_dates)) {
+          unavailableDates = data.unavailable_dates;
           // Convert to Date objects and disable those dates in flatpickr
           const disableDates = unavailableDates.map(dateStr => new Date(dateStr));
           calendar.set("disable", disableDates);
           calendar.redraw();
           console.log("Disabled dates applied:", disableDates);
+        } else {
+            console.warn("Backend response not as expected for unavailable dates:", data);
+            showStatus(data.message || "Failed to fetch unavailable dates due to unexpected data format.");
         }
       })
-      .catch(err => console.error("Error fetching unavailable dates:", err));
+      .catch(err => {
+        console.error("Error fetching unavailable dates:", err);
+        showStatus(`Error fetching unavailable dates: ${err.message}. Please check console.`);
+      });
   }
 
   // Initialize flatpickr with disabled dates
@@ -200,6 +216,10 @@
           deliveryDate = "";
           pickupDate = "";
         }
+      } else {
+        // If less than 2 dates selected, clear the dates
+        deliveryDate = "";
+        pickupDate = "";
       }
     },
     onReady: function() {
@@ -221,7 +241,7 @@
     const time = document.getElementById('timeSlot').value;
 
     if (!name || !email || !deliveryDate || !pickupDate || !time) {
-      showStatus("Please complete all fields.");
+      showStatus("Please complete all fields and select a date range.");
       resetSubmitButton();
       return;
     }
@@ -233,17 +253,36 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
-    .then(res => res.json())
     .then(res => {
-      if (res.status === "fully_booked") {
+        console.log("POST fetch response status:", res.status);
+        if (!res.ok) { // Check for HTTP errors (e.g., 404, 500)
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+    })
+    .then(res => {
+      console.log("POST Data returned from backend:", res);
+      // *** CRITICAL CHANGE: Check for 'unavailable' status for fully booked ***
+      if (res.status === "unavailable") { // Changed from "fully_booked" to "unavailable"
         showStatus(res.message);
-      } else {
+        // Optionally, update the calendar to reflect the newly unavailable dates
+        if (Array.isArray(res.unavailable_dates)) {
+            unavailableDates = [...new Set([...unavailableDates, ...res.unavailable_dates])]; // Merge and unique
+            const disableDates = unavailableDates.map(dateStr => new Date(dateStr));
+            calendar.set("disable", disableDates);
+            calendar.redraw();
+        }
+      } else if (res.status === "booked") { // Changed to check for "booked" status from backend
         showStatus("Booking submitted! Redirecting to payment...", 'success');
         setTimeout(() => window.location.href = "https://square.link/u/hjhYelu2", 2000);
+      } else {
+          // Handle other unexpected statuses from backend
+          showStatus(res.message || "An unexpected response was received from the server.");
       }
     })
-    .catch(() => {
-      showStatus("Submission failed. Please try again later.");
+    .catch(err => {
+      console.error("Submission failed:", err);
+      showStatus(`Submission failed: ${err.message}. Please try again later.`);
     })
     .finally(() => resetSubmitButton());
   });
