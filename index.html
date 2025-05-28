@@ -44,16 +44,13 @@
     }
 
     #dateRangeWrapper {
-      text-align: center;
+      display: flex;
+      justify-content: center;
       margin: 24px 0;
     }
 
     #dateRangePicker {
       display: inline-block;
-    }
-
-    .flatpickr-calendar {
-      width: 100% !important;
     }
 
     button {
@@ -144,7 +141,6 @@
   let deliveryDate = "";
   let pickupDate = "";
 
-  // Debug mode disabled
   const DEBUG_MODE = false;
 
   function showStatus(message, type = 'error') {
@@ -172,11 +168,9 @@
     minDate: "today",
     dateFormat: "Y-m-d",
     onChange: function(selectedDates) {
-      if (DEBUG_MODE) debugLog("Date selection changed", selectedDates);
       if (selectedDates.length === 2) {
         deliveryDate = selectedDates[0].toISOString().split('T')[0];
         pickupDate = selectedDates[1].toISOString().split('T')[0];
-        if (DEBUG_MODE) debugLog("Dates set", {deliveryDate, pickupDate});
       }
     }
   });
@@ -200,7 +194,6 @@
     }
 
     const data = { name, email, delivery_date: deliveryDate, pickup_date: pickupDate, time };
-    if (DEBUG_MODE) debugLog("Sending data", data);
 
     const scriptUrl = "https://script.google.com/macros/s/AKfycbxNS7xUydnz8QibxFlmFt_BesJnKeZur9Im0ItOo0tu3Jy9xsz4gWeCQvhYcXdaHJBdEA/exec";
 
@@ -217,7 +210,6 @@
       }, 2000);
     })
     .catch(error => {
-      if (DEBUG_MODE) debugLog("Fetch error", error);
       showStatus("Submission failed. Please try again later.");
       resetSubmitButton();
     });
