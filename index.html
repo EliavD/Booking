@@ -4,109 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dumpster Booking</title>
-
-  <!-- Flatpickr -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-  <style>
-    #message-box {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 6px;
-      font-weight: bold;
-      display: none;
-    }
-    #message-box.success {
-      background-color: #e6ffe6;
-      color: #207520;
-      border: 1px solid #20a020;
-    }
-    #message-box.error {
-      background-color: #ffe6e6;
-      color: #a02020;
-      border: 1px solid #cc0000;
-    }
-
-    /* Style for fully booked dates */
-    .flatpickr-day.fully-booked {
-      text-decoration: line-through;
-      color: red !important;
-      pointer-events: none;
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-  </style>
 </head>
 <body>
   <form id="booking-form">
     <input type="text" id="name" placeholder="Your name" required>
     <input type="email" id="email" placeholder="Your email" required>
-    <input type="text" id="delivery_date" placeholder="Delivery date" required>
-    <input type="text" id="pickup_date" placeholder="Pickup date" required>
+    <input type="date" id="delivery_date" required>
+    <input type="date" id="pickup_date" required>
     <input type="time" id="time" required>
     <button type="submit">Book Dumpster</button>
   </form>
 
-  <div id="message-box"></div>
-
   <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec';
-    const form = document.getElementById('booking-form');
-    const messageBox = document.getElementById('message-box');
 
-    function showMessage(text, type) {
-      messageBox.textContent = text;
-      messageBox.className = type === 'success' ? 'success' : 'error';
-      messageBox.style.display = 'block';
-    }
-
-    async function getFullyBookedDates() {
-      const today = new Date();
-      const future = new Date();
-      future.setDate(future.getDate() + 60);
-
-      const todayStr = today.toISOString().split("T")[0];
-      const futureStr = future.toISOString().split("T")[0];
-
-      const blocked = [];
-
-      for (let d = new Date(today); d <= future; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split("T")[0];
-        const res = await fetch(`${scriptURL}?start=${dateStr}&end=${dateStr}`);
-        const json = await res.json();
-        if (json.overlapping >= 3) {
-          blocked.push(dateStr);
-        }
-      }
-
-      return blocked;
-    }
-
-    async function setupFlatpickr() {
-      const fullyBooked = await getFullyBookedDates();
-
-      const options = {
-        minDate: "today",
-        disable: fullyBooked,
-        onDayCreate: function(dObj, dStr, fp, dayElem) {
-          const date = dayElem.dateObj.toISOString().split("T")[0];
-          if (fullyBooked.includes(date)) {
-            dayElem.classList.add("fully-booked");
-            dayElem.title = "Fully booked";
-          }
-        }
-      };
-
-      flatpickr("#delivery_date", options);
-      flatpickr("#pickup_date", options);
-    }
-
-    setupFlatpickr();
-
-    form.addEventListener('submit', async function (e) {
+    document.getElementById('booking-form').addEventListener('submit', async function (e) {
       e.preventDefault();
-      messageBox.style.display = 'none';
 
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
@@ -114,26 +27,26 @@
       const pickupDate = document.getElementById('pickup_date').value;
       const time = document.getElementById('time').value;
 
-      // Check availability
+      // Step 1: Check Availability using doGet
       try {
-        const response = await fetch(`${scriptURL}?start=${deliveryDate}&end=${pickupDate}`);
-        const data = await response.json();
+        const availabilityResponse = await fetch(`${scriptURL}?start=${deliveryDate}&end=${pickupDate}`);
+        const availabilityData = await availabilityResponse.json();
 
-        if (data.status !== "ok") {
-          showMessage("Error checking availability: " + data.message, "error");
+        if (availabilityData.status !== "ok") {
+          alert("Error checking availability: " + availabilityData.message);
           return;
         }
 
-        if (data.overlapping >= 3) {
-          showMessage("❌ Those dates are unavailable. Please choose different ones.", "error");
+        if (availabilityData.overlapping >= 3) {
+          alert("Sorry, we're fully booked for those dates. Please select different dates.");
           return;
         }
       } catch (error) {
-        showMessage("⚠️ Could not check availability. Please try again.", "error");
+        alert("Unable to check availability. Please try again.");
         return;
       }
 
-      // Submit booking
+      // Step 2: Proceed with Booking (POST)
       const bookingData = {
         name,
         email,
@@ -146,19 +59,23 @@
         const response = await fetch(scriptURL, {
           method: 'POST',
           body: JSON.stringify(bookingData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
         const result = await response.json();
         if (result.status === "booked") {
-          showMessage("✅ Booking confirmed from " + deliveryDate + " to " + pickupDate + ".", "success");
+          alert("Your booking has been confirmed!");
+          // Optional: redirect to payment page
+          // window.location.href = "https://your.square.checkout.link";
         } else if (result.status === "fully_booked") {
-          showMessage("❌ Those dates are unavailable. Please choose different ones.", "error");
+          alert("Booking failed: We're already fully booked for those dates.");
         } else {
-          showMessage("⚠️ Booking failed: " + result.message, "error");
+          alert("Booking error: " + result.message);
         }
       } catch (error) {
-        showMessage("⚠️ Something went wrong. Please try again later.", "error");
+        alert("An error occurred while submitting your booking. Please try again.");
       }
     });
   </script>
