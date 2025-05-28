@@ -227,7 +227,7 @@
     }
 
     const data = { name, email, delivery_date: deliveryDate, pickup_date: pickupDate, time };
-
+console.log("Submitting data:", data);
     fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
