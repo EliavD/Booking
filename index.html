@@ -1,218 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Schedule Your Dumpster</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .form-container {
-      max-width: 600px;
-      margin: auto;
-      background-color: rgba(1, 176, 187, 0.05);
-      border: 1px solid rgba(1, 176, 187, 0.3);
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
-      padding: 24px;
-    }
-
-    h2 {
-      text-align: center;
-      color: #01b0bb;
-    }
-
-    label {
-      color: #01b0bb;
-      margin-bottom: 4px;
-      display: block;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(1, 176, 187, 0.4);
-      border-radius: 8px;
-      background-color: rgba(1, 176, 187, 0.05);
-      box-sizing: border-box;
-    }
-
-    #dateRangeWrapper {
-      display: flex;
-      justify-content: center;
-      margin: 24px 0;
-    }
-
-    .flatpickr-calendar {
-      width: 100% !important;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      background-color: #01b0bb;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
-    }
-
-    button:hover {
-      background-color: #019aa3;
-    }
-
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-
-    .flatpickr-day.selected {
-      background: #01b0bb !important;
-      color: white !important;
-      border-radius: 8px !important;
-    }
-
-    .status-message {
-      padding: 12px;
-      margin: 16px 0;
-      border-radius: 8px;
-      text-align: center;
-      display: none;
-    }
-
-    .status-success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .status-error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dumpster Booking</title>
 </head>
 <body>
-
-<div class="form-container">
-  <h2>Schedule Now</h2>
-
-  <div id="statusMessage" class="status-message"></div>
-
-  <form id="bookingForm">
-    <label for="name">Your Name</label>
-    <input type="text" id="name" required>
-
-    <label for="email">Your Email</label>
-    <input type="email" id="email" required>
-
-    <label>Select Delivery and Pickup Dates</label>
-    <div id="dateRangeWrapper">
-      <input type="text" id="dateRangePicker" placeholder="Select date range" readonly>
-    </div>
-
-    <label for="timeSlot">Select Drop-Off Time Slot</label>
-    <select id="timeSlot" required>
-      <option value="" disabled selected>Select a 2-hour window</option>
-      <option value="07:00">7:00 AM – 9:00 AM</option>
-      <option value="09:00">9:00 AM – 11:00 AM</option>
-      <option value="11:00">11:00 AM – 1:00 PM</option>
-      <option value="13:00">1:00 PM – 3:00 PM</option>
-      <option value="15:00">3:00 PM – 5:00 PM</option>
-      <option value="17:00">5:00 PM – 7:00 PM</option>
-      <option value="19:00">7:00 PM – 9:00 PM</option>
-    </select>
-
-    <button type="submit" id="submitBtn">Submit and Confirm</button>
+  <form id="booking-form">
+    <input type="text" id="name" placeholder="Your name" required>
+    <input type="email" id="email" placeholder="Your email" required>
+    <input type="date" id="delivery_date" required>
+    <input type="date" id="pickup_date" required>
+    <input type="time" id="time" required>
+    <button type="submit">Book Dumpster</button>
   </form>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-  let deliveryDate = "";
-  let pickupDate = "";
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec';
 
-  function showStatus(message, type = 'error') {
-    const statusDiv = document.getElementById('statusMessage');
-    statusDiv.textContent = message;
-    statusDiv.className = `status-message status-${type}`;
-    statusDiv.style.display = 'block';
+    document.getElementById('booking-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
 
-    if (type === 'success') {
-      setTimeout(() => {
-        statusDiv.style.display = 'none';
-      }, 5000);
-    }
-  }
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const deliveryDate = document.getElementById('delivery_date').value;
+      const pickupDate = document.getElementById('pickup_date').value;
+      const time = document.getElementById('time').value;
 
-  flatpickr("#dateRangePicker", {
-    mode: "range",
-    inline: true,
-    minDate: "today",
-    dateFormat: "Y-m-d",
-    onChange: function(selectedDates) {
-      if (selectedDates.length === 2) {
-        deliveryDate = selectedDates[0].toISOString().split('T')[0];
-        pickupDate = selectedDates[1].toISOString().split('T')[0];
+      // Step 1: Check Availability using doGet
+      try {
+        const availabilityResponse = await fetch(`${scriptURL}?start=${deliveryDate}&end=${pickupDate}`);
+        const availabilityData = await availabilityResponse.json();
+
+        if (availabilityData.status !== "ok") {
+          alert("Error checking availability: " + availabilityData.message);
+          return;
+        }
+
+        if (availabilityData.overlapping >= 3) {
+          alert("Sorry, we're fully booked for those dates. Please select different dates.");
+          return;
+        }
+      } catch (error) {
+        alert("Unable to check availability. Please try again.");
+        return;
       }
-    }
-  });
 
-  const form = document.getElementById('bookingForm');
-  const submitBtn = document.getElementById('submitBtn');
+      // Step 2: Proceed with Booking (POST)
+      const bookingData = {
+        name,
+        email,
+        delivery_date: deliveryDate,
+        pickup_date: pickupDate,
+        time
+      };
 
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
+      try {
+        const response = await fetch(scriptURL, {
+          method: 'POST',
+          body: JSON.stringify(bookingData),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const time = document.getElementById('timeSlot').value;
-
-    if (!name || !email || !deliveryDate || !pickupDate || !time) {
-      showStatus("Please complete all fields.");
-      resetSubmitButton();
-      return;
-    }
-
-    const data = { name, email, delivery_date: deliveryDate, pickup_date: pickupDate, time };
-
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzYucyDBRqDRX4g4O7k-Zx3prpLNfyIsCAHaa9BRffb6ACE48AJali9hVS-6dkv3jFQtg/exec";
-
-    fetch(scriptUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      mode: 'no-cors'
-    })
-    .then(() => {
-      showStatus("Booking submitted! Redirecting to payment...", 'success');
-      setTimeout(() => {
-        window.location.href = "https://square.link/u/hjhYelu2";
-      }, 2000);
-    })
-    .catch(() => {
-      showStatus("Submission failed. Please try again later.");
-      resetSubmitButton();
+        const result = await response.json();
+        if (result.status === "booked") {
+          alert("Your booking has been confirmed!");
+          // Optional: redirect to payment page
+          // window.location.href = "https://your.square.checkout.link";
+        } else if (result.status === "fully_booked") {
+          alert("Booking failed: We're already fully booked for those dates.");
+        } else {
+          alert("Booking error: " + result.message);
+        }
+      } catch (error) {
+        alert("An error occurred while submitting your booking. Please try again.");
+      }
     });
-  });
-
-  function resetSubmitButton() {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Submit and Confirm';
-  }
-</script>
-
+  </script>
 </body>
 </html>
-
