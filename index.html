@@ -1,122 +1,259 @@
-
-make the neccesary corrections to the frontend code // Utility: Parse date string into local midnight
-function toLocalMidnight(dateStr) {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day, 0, 0, 0);
-}
-
-// POST: Handle booking submission
-function doPost(e) {
-  Logger.log("--- New doPost Execution ---");
-
-  if (!e || !e.postData || !e.postData.contents) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "No POST data received."
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  let data;
-  try {
-    data = JSON.parse(e.postData.contents);
-    Logger.log("Received data: " + JSON.stringify(data));
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "Invalid JSON: " + error.message
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  const { name, email, delivery_date, pickup_date, time } = data;
-  if (!name || !email || !delivery_date || !pickup_date || !time) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "Missing required fields."
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  const calendarId = "afde913e0bbb5c4de2f42b45187802ba8b49f3b4d5fcba1ab41938ced5fc1ecc@group.calendar.google.com";
-  const calendar = CalendarApp.getCalendarById(calendarId);
-  if (!calendar) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "Calendar not found."
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  try {
-    const startDate = toLocalMidnight(delivery_date);
-    const endDate = toLocalMidnight(pickup_date);
-    endDate.setDate(endDate.getDate() + 1); // Include full pickup day
-
-    Logger.log("Booking request from " + startDate.toISOString().slice(0, 10) + " to " + endDate.toISOString().slice(0, 10));
-
-    const overlappingRentals = calendar.getEvents(startDate, endDate).length;
-    Logger.log("Rentals overlapping with request: " + overlappingRentals);
-
-    if (overlappingRentals >= 3) {
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "fully_booked",
-        message: "We're fully booked for the requested dates. Please choose different ones."
-      })).setMimeType(ContentService.MimeType.JSON);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Schedule Your Dumpster</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
     }
 
-    calendar.createEvent(Dumpster Booking: ${name}, startDate, endDate, {
-      description: Client: ${name}\nEmail: ${email}\nDelivery: ${delivery_date} at ${time}\nPickup: ${pickup_date}
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      background-color: rgba(1, 176, 187, 0.05);
+      border: 1px solid rgba(1, 176, 187, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
+      padding: 24px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #01b0bb;
+    }
+
+    label {
+      color: #01b0bb;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(1, 176, 187, 0.4);
+      border-radius: 8px;
+      background-color: rgba(1, 176, 187, 0.05);
+      box-sizing: border-box;
+    }
+
+    #dateRangeWrapper {
+      display: flex;
+      justify-content: center;
+      margin: 24px 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      background-color: #01b0bb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
+    }
+
+    button:hover {
+      background-color: #019aa3;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .flatpickr-day.selected {
+      background: #01b0bb !important;
+      color: white !important;
+      border-radius: 8px !important;
+    }
+
+    .flatpickr-day.unavailable {
+      text-decoration: line-through;
+      background-color: #ffe5e5 !important;
+      color: #ff0000 !important;
+      cursor: not-allowed !important;
+    }
+
+    .status-message {
+      padding: 12px;
+      margin: 16px 0;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+    }
+
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+  <h2>Schedule Now</h2>
+  <div id="statusMessage" class="status-message"></div>
+
+  <form id="bookingForm">
+    <label for="name">Your Name</label>
+    <input type="text" id="name" required>
+
+    <label for="email">Your Email</label>
+    <input type="email" id="email" required>
+
+    <label>Select Delivery and Pickup Dates</label>
+    <div id="dateRangeWrapper">
+      <input type="text" id="dateRangePicker" placeholder="Select date range" readonly>
+    </div>
+
+    <label for="timeSlot">Select Drop-Off Time Slot</label>
+    <select id="timeSlot" required>
+      <option value="" disabled selected>Select a 2-hour window</option>
+      <option value="07:00">7:00 AM – 9:00 AM</option>
+      <option value="09:00">9:00 AM – 11:00 AM</option>
+      <option value="11:00">11:00 AM – 1:00 PM</option>
+      <option value="13:00">1:00 PM – 3:00 PM</option>
+      <option value="15:00">3:00 PM – 5:00 PM</option>
+      <option value="17:00">5:00 PM – 7:00 PM</option>
+      <option value="19:00">7:00 PM – 9:00 PM</option>
+    </select>
+
+    <button type="submit" id="submitBtn">Submit and Confirm</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  let deliveryDate = "";
+  let pickupDate = "";
+  let unavailableDates = [];
+
+  function showStatus(message, type = 'error') {
+    const statusDiv = document.getElementById('statusMessage');
+    statusDiv.textContent = message;
+    statusDiv.className = `status-message status-${type}`;
+    statusDiv.style.display = 'block';
+
+    if (type === 'success') {
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 5000);
+    }
+  }
+
+  function fetchUnavailableDates() {
+    const today = new Date();
+    const start = today.toISOString().split("T")[0];
+    const end = new Date(today.setMonth(today.getMonth() + 1)).toISOString().split("T")[0];
+
+    fetch(`https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec?start=${start}&end=${end}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "ok" && Array.isArray(data.dates)) {
+          unavailableDates = data.dates;
+          calendar.set("disable", unavailableDates);
+          calendar.redraw();
+        }
+      });
+  }
+
+  const calendar = flatpickr("#dateRangePicker", {
+    mode: "range",
+    inline: true,
+    minDate: "today",
+    dateFormat: "Y-m-d",
+    onDayCreate: function(dObj, dStr, fp, dayElem) {
+      const date = dayElem.dateObj.toISOString().split('T')[0];
+      if (unavailableDates.includes(date)) {
+        dayElem.classList.add("unavailable");
+      }
+    },
+    onChange: function(selectedDates) {
+      if (selectedDates.length === 2) {
+        const start = selectedDates[0].toISOString().split('T')[0];
+        const end = selectedDates[1].toISOString().split('T')[0];
+        const selectedRange = [];
+
+        let date = new Date(selectedDates[0]);
+        while (date <= selectedDates[1]) {
+          selectedRange.push(date.toISOString().split('T')[0]);
+          date.setDate(date.getDate() + 1);
+        }
+
+        const conflict = selectedRange.some(d => unavailableDates.includes(d));
+        if (conflict) {
+          showStatus("Those dates are unavailable. Please choose different ones.");
+          fp.clear();
+        } else {
+          deliveryDate = start;
+          pickupDate = end;
+        }
+      }
+    }
+  });
+
+  fetchUnavailableDates();
+
+  const form = document.getElementById('bookingForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const time = document.getElementById('timeSlot').value;
+
+    if (!name || !email || !deliveryDate || !pickupDate || !time) {
+      showStatus("Please complete all fields.");
+      resetSubmitButton();
+      return;
+    }
+
+    const data = { name, email, delivery_date: deliveryDate, pickup_date: pickupDate, time };
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec";
+
+    fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      mode: 'no-cors'
+    })
+    .then(() => {
+      showStatus("Booking submitted! Redirecting to payment...", 'success');
+      setTimeout(() => {
+        window.location.href = "https://square.link/u/hjhYelu2";
+      }, 2000);
+    })
+    .catch(() => {
+      showStatus("Submission failed. Please try again later.");
+      resetSubmitButton();
     });
+  });
 
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "booked",
-      message: Dumpster successfully booked from ${delivery_date} to ${pickup_date}.
-    })).setMimeType(ContentService.MimeType.JSON);
-
-  } catch (error) {
-    Logger.log("Error: " + error.message);
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: error.message
-    })).setMimeType(ContentService.MimeType.JSON);
+  function resetSubmitButton() {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit and Confirm';
   }
-}
+</script>
 
-// GET: Check availability for a date range
-function doGet(e) {
-  Logger.log("--- New doGet Execution ---");
-
-  const calendarId = "afde913e0bbb5c4de2f42b45187802ba8b49f3b4d5fcba1ab41938ced5fc1ecc@group.calendar.google.com";
-  const calendar = CalendarApp.getCalendarById(calendarId);
-  if (!calendar) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "Calendar not found."
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  const start = e.parameter.start;
-  const end = e.parameter.end;
-
-  if (!start || !end) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "Missing 'start' or 'end' parameters."
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  try {
-    const startDate = toLocalMidnight(start);
-    const endDate = toLocalMidnight(end);
-    endDate.setDate(endDate.getDate() + 1); // Include full pickup day
-
-    const overlapping = calendar.getEvents(startDate, endDate).length;
-
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "ok",
-      overlapping
-    })).setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: error.message
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
+</body>
+</html>
