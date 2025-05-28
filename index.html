@@ -49,6 +49,10 @@
       margin: 24px 0;
     }
 
+    .flatpickr-calendar {
+      width: 100% !important;
+    }
+
     button {
       width: 100%;
       padding: 14px;
@@ -76,13 +80,6 @@
       border-radius: 8px !important;
     }
 
-    .flatpickr-day.unavailable {
-      text-decoration: line-through;
-      background-color: #ffe5e5 !important;
-      color: #ff0000 !important;
-      cursor: not-allowed !important;
-    }
-
     .status-message {
       padding: 12px;
       margin: 16px 0;
@@ -108,6 +105,7 @@
 
 <div class="form-container">
   <h2>Schedule Now</h2>
+
   <div id="statusMessage" class="status-message"></div>
 
   <form id="bookingForm">
@@ -144,17 +142,14 @@
   let pickupDate = "";
   let unavailableDates = [];
 
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec";
+
   function showStatus(message, type = 'error') {
     const statusDiv = document.getElementById('statusMessage');
     statusDiv.textContent = message;
     statusDiv.className = `status-message status-${type}`;
     statusDiv.style.display = 'block';
-
-    if (type === 'success') {
-      setTimeout(() => {
-        statusDiv.style.display = 'none';
-      }, 5000);
-    }
+    if (type === 'success') setTimeout(() => statusDiv.style.display = 'none', 5000);
   }
 
   function fetchUnavailableDates() {
@@ -162,13 +157,12 @@
     const start = today.toISOString().split("T")[0];
     const end = new Date(today.setMonth(today.getMonth() + 1)).toISOString().split("T")[0];
 
-    fetch(`https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec?start=${start}&end=${end}`)
+    fetch(`${scriptUrl}?start=${start}&end=${end}`)
       .then(res => res.json())
       .then(data => {
         if (data.status === "ok" && Array.isArray(data.dates)) {
           unavailableDates = data.dates;
-          calendar.set("disable", unavailableDates);
-          calendar.redraw();
+          calendar.set("disable", unavailableDates.map(date => new Date(date)));
         }
       });
   }
@@ -178,37 +172,26 @@
     inline: true,
     minDate: "today",
     dateFormat: "Y-m-d",
-    onDayCreate: function(dObj, dStr, fp, dayElem) {
-      const date = dayElem.dateObj.toISOString().split('T')[0];
-      if (unavailableDates.includes(date)) {
-        dayElem.classList.add("unavailable");
-      }
-    },
     onChange: function(selectedDates) {
       if (selectedDates.length === 2) {
-        const start = selectedDates[0].toISOString().split('T')[0];
-        const end = selectedDates[1].toISOString().split('T')[0];
-        const selectedRange = [];
+        deliveryDate = selectedDates[0].toISOString().split('T')[0];
+        pickupDate = selectedDates[1].toISOString().split('T')[0];
 
-        let date = new Date(selectedDates[0]);
-        while (date <= selectedDates[1]) {
-          selectedRange.push(date.toISOString().split('T')[0]);
-          date.setDate(date.getDate() + 1);
-        }
-
-        const conflict = selectedRange.some(d => unavailableDates.includes(d));
-        if (conflict) {
-          showStatus("Those dates are unavailable. Please choose different ones.");
-          fp.clear();
-        } else {
-          deliveryDate = start;
-          pickupDate = end;
+        if (unavailableDates.some(date => {
+          const d = new Date(date).getTime();
+          return selectedDates.some(sel => sel.getTime() === d);
+        })) {
+          showStatus("One or more selected dates are unavailable. Please choose different dates.");
+          calendar.clear();
+          deliveryDate = "";
+          pickupDate = "";
         }
       }
+    },
+    onReady: function() {
+      fetchUnavailableDates();
     }
   });
-
-  fetchUnavailableDates();
 
   const form = document.getElementById('bookingForm');
   const submitBtn = document.getElementById('submitBtn');
@@ -229,24 +212,23 @@
     }
 
     const data = { name, email, delivery_date: deliveryDate, pickup_date: pickupDate, time };
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzGSeYDDeSN5sxa15rvx2Tgpm_CkY5m2VDocp6nr4Oqht29CY_FHmwYlCkNXGAR87qXgw/exec";
 
     fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      mode: 'no-cors'
+      body: JSON.stringify(data)
     })
-    .then(() => {
-      showStatus("Booking submitted! Redirecting to payment...", 'success');
-      setTimeout(() => {
-        window.location.href = "https://square.link/u/hjhYelu2";
-      }, 2000);
+    .then(res => res.json())
+    .then(res => {
+      if (res.status === "fully_booked") {
+        showStatus(res.message);
+      } else {
+        showStatus("Booking submitted! Redirecting to payment...", 'success');
+        setTimeout(() => window.location.href = "https://square.link/u/hjhYelu2", 2000);
+      }
     })
-    .catch(() => {
-      showStatus("Submission failed. Please try again later.");
-      resetSubmitButton();
-    });
+    .catch(() => showStatus("Submission failed. Please try again later."))
+    .finally(() => resetSubmitButton());
   });
 
   function resetSubmitButton() {
