@@ -21,7 +21,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(255, 255, 255, 0.6); /* Overlay for readability */
+      background: rgba(255, 255, 255, 0.6);
       z-index: -1;
     }
 
@@ -34,15 +34,18 @@
       box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
       padding: 24px;
     }
+
     h2 {
       text-align: center;
       color: #01b0bb;
     }
+
     label {
       color: #01b0bb;
       margin-bottom: 4px;
       display: block;
     }
+
     input, select {
       width: 100%;
       padding: 10px;
@@ -52,14 +55,17 @@
       background-color: rgba(1, 176, 187, 0.05);
       box-sizing: border-box;
     }
+
     #dateRangeWrapper {
       display: flex;
       justify-content: center;
       margin: 24px 0;
     }
+
     #dateRangePicker {
       display: inline-block;
     }
+
     button {
       width: 100%;
       padding: 14px;
@@ -71,18 +77,22 @@
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
     }
+
     button:hover {
       background-color: #019aa3;
     }
+
     button:disabled {
       background-color: #ccc;
       cursor: not-allowed;
     }
+
     .flatpickr-day.fully-booked {
       background: #e74c3c !important;
       color: white !important;
       position: relative;
     }
+
     .flatpickr-day.fully-booked::after {
       content: "";
       position: absolute;
@@ -93,6 +103,7 @@
       left: 0;
       transform: rotate(-45deg);
     }
+
     .status-message {
       padding: 12px;
       margin: 16px 0;
@@ -100,11 +111,13 @@
       text-align: center;
       display: none;
     }
+
     .status-success {
       background-color: #d4edda;
       color: #155724;
       border: 1px solid #c3e6cb;
     }
+
     .status-error {
       background-color: #f8d7da;
       color: #721c24;
@@ -141,6 +154,20 @@
       <option value="17:00">5:00 PM – 7:00 PM</option>
       <option value="19:00">7:00 PM – 9:00 PM</option>
     </select>
+
+    <div style="margin-bottom: 16px;">
+      <p style="margin-bottom: 8px;">
+        Please review our
+        <a href="https://drive.google.com/file/d/1TN9TzSHGByCaQL4vJUk6XRrjJOiKAeJG/view?usp=sharing" target="_blank" style="color: #01b0bb; text-decoration: underline;">
+          Rental Agreement
+        </a>
+        before booking.
+      </p>
+      <label>
+        <input type="checkbox" id="agreeTerms" required>
+        I have read and agree to the rental terms and conditions.
+      </label>
+    </div>
 
     <button type="submit" id="submitBtn">Submit and Confirm</button>
   </form>
@@ -205,6 +232,13 @@
 
   document.getElementById('bookingForm').addEventListener('submit', function(e) {
     e.preventDefault();
+
+    const agreeTerms = document.getElementById('agreeTerms');
+    if (!agreeTerms.checked) {
+      showStatus("You must agree to the rental terms and conditions before continuing.");
+      return;
+    }
+
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
