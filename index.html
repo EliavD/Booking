@@ -1,114 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Schedule Your Dumpster</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <style>
-    /* (Styling unchanged from your version) */
-      font-family: Arial, sans-serif;body {
-  /* Background image properties */
-  background-image: url('https://img1.wsimg.com/isteam/ip/f99872e7-ae59-4e90-b7c8-92cc9f524a51/blob-bcd3161.png');
-  background-size: cover; /* Ensures the image covers the entire background */
-  background-repeat: no-repeat; /* Prevents the image from repeating */
-  background-attachment: fixed; /* Keeps the image fixed when scrolling */
-  background-position: center center; /* Centers the image */
+  <meta charset="UTF-8">
+  <title>Schedule Your Dumpster</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      /* Background image properties */
+      background-image: url('https://img1.wsimg.com/isteam/ip/f99872e7-ae59-4e90-b7c8-92cc9f524a51/blob-bcd3161.png');
+      background-size: cover; /* Ensures the image covers the entire background */
+      background-repeat: no-repeat; /* Prevents the image from repeating */
+      background-attachment: fixed; /* Keeps the image fixed when scrolling */
+      background-position: center center; /* Centers the image */
 
-  /* Original background color (will be mostly covered by the image) */
-  background: #f9f9f9;
-  margin: 0;
-  padding: 20px;
-}
-      background: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-    }
-    .form-container {
-      max-width: 600px;
-      margin: auto;
-      background-color: rgba(1, 176, 187, 0.05);
-      border: 1px solid rgba(1, 176, 187, 0.3);
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
-      padding: 24px;
-    }
-    h2 {
-      text-align: center;
-      color: #01b0bb;
-    }
-    label {
-      color: #01b0bb;
-      margin-bottom: 4px;
-      display: block;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(1, 176, 187, 0.4);
-      border-radius: 8px;
-      background-color: rgba(1, 176, 187, 0.05);
-      box-sizing: border-box;
-    }
-    #dateRangeWrapper {
-      display: flex;
-      justify-content: center;
-      margin: 24px 0;
-    }
-    #dateRangePicker {
-      display: inline-block;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      background-color: #01b0bb;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
-    }
-    button:hover {
-      background-color: #019aa3;
-    }
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    .flatpickr-day.fully-booked {
-      background: #e74c3c !important;
-      color: white !important;
-      position: relative;
-    }
-    .flatpickr-day.fully-booked::after {
-      content: "";
-      position: absolute;
-      height: 2px;
-      background: white;
-      width: 100%;
-      top: 50%;
-      left: 0;
-      transform: rotate(-45deg);
-    }
-    .status-message {
-      padding: 12px;
-      margin: 16px 0;
-      border-radius: 8px;
-      text-align: center;
-      display: none;
-    }
-    .status-success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    .status-error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-  </style>
+      /* Original background color (will be mostly covered by the image) */
+      background-color: #f9f9f9; /* Using background-color for clarity */
+      margin: 0;
+      padding: 20px;
+    }
+
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      background-color: rgba(1, 176, 187, 0.05);
+      border: 1px solid rgba(1, 176, 187, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
+      padding: 24px;
+    }
+    h2 {
+      text-align: center;
+      color: #01b0bb;
+    }
+    label {
+      color: #01b0bb;
+      margin-bottom: 4px;
+      display: block;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(1, 176, 187, 0.4);
+      border-radius: 8px;
+      background-color: rgba(1, 176, 187, 0.05);
+      box-sizing: border-box;
+    }
+    #dateRangeWrapper {
+      display: flex;
+      justify-content: center;
+      margin: 24px 0;
+    }
+    #dateRangePicker {
+      display: inline-block;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      background-color: #01b0bb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
+    }
+    button:hover {
+      background-color: #019aa3;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .flatpickr-day.fully-booked {
+      background: #e74c3c !important;
+      color: white !important;
+      position: relative;
+    }
+    .flatpickr-day.fully-booked::after {
+      content: "";
+      position: absolute;
+      height: 2px;
+      background: white;
+      width: 100%;
+      top: 50%;
+      left: 0;
+      transform: rotate(-45deg);
+    }
+    .status-message {
+      padding: 12px;
+      margin: 16px 0;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+    }
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    } /* You were missing a closing brace here before */
+  </style>
 </head>
 <body>
 
