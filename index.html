@@ -6,64 +6,54 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     body {
+      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
-      background-color: #f2f2f2;
+      padding: 20px;
+      background: url('https://img1.wsimg.com/isteam/ip/f99872e7-ae59-4e90-b7c8-92cc9f524a51/mail.google.jpg') center center / cover no-repeat fixed;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(8px);
+      background-color: rgba(255, 255, 255, 0.5);
+      z-index: -1;
     }
 
     .form-container {
-      font-family: Arial, sans-serif;
       max-width: 600px;
       margin: auto;
-      background-image: url('https://img1.wsimg.com/isteam/ip/f99872e7-ae59-4e90-b7c8-92cc9f524a51/mail.google.jpg');
-      background-size: cover;
-      background-position: center;
+      background-color: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(1, 176, 187, 0.3);
       border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-      padding: 28px;
-      color: white;
-      position: relative;
-      border: 1px solid #ccc;
-    }
-
-    .form-container::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 16px;
-      z-index: 0;
-    }
-
-    .form-container * {
-      position: relative;
-      z-index: 1;
+      box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
+      padding: 24px;
     }
 
     h2 {
       text-align: center;
-      color: #ffffff;
-      font-size: 28px;
-      margin-bottom: 20px;
+      color: #01b0bb;
     }
 
     label {
-      color: #ffffff;
-      font-weight: bold;
-      margin-bottom: 6px;
+      color: #01b0bb;
+      margin-bottom: 4px;
       display: block;
     }
 
     input, select {
       width: 100%;
-      padding: 12px;
-      margin-bottom: 18px;
-      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(1, 176, 187, 0.4);
       border-radius: 8px;
-      font-size: 15px;
+      background-color: rgba(1, 176, 187, 0.05);
       box-sizing: border-box;
-      background-color: #ffffff;
-      color: #000;
     }
 
     #dateRangeWrapper {
@@ -73,7 +63,11 @@
     }
 
     #dateRangePicker {
-      display: inline-block;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(1, 176, 187, 0.4);
+      background-color: rgba(1, 176, 187, 0.05);
     }
 
     button {
@@ -85,8 +79,7 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.4);
-      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
     }
 
     button:hover {
@@ -120,7 +113,6 @@
       margin: 16px 0;
       border-radius: 8px;
       text-align: center;
-      font-weight: bold;
       display: none;
     }
 
@@ -170,7 +162,7 @@
     <div style="margin-bottom: 16px;">
       <p style="margin-bottom: 8px;">
         Please review our
-        <a href="https://drive.google.com/file/d/1TN9TzSHGByCaQL4vJUk6XRrjJOiKAeJG/view?usp=sharing" target="_blank" style="color: #ffffff; text-decoration: underline;">
+        <a href="https://drive.google.com/file/d/1TN9TzSHGByCaQL4vJUk6XRrjJOiKAeJG/view?usp=sharing" target="_blank" style="color: #01b0bb; text-decoration: underline;">
           Rental Agreement
         </a>
         before booking.
@@ -228,10 +220,15 @@
 
       flatpickr("#dateRangePicker", {
         mode: "range",
-        inline: true,
         minDate: "today",
         dateFormat: "Y-m-d",
         disable: fullyBookedDates,
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+          const date = dayElem.dateObj.toISOString().split('T')[0];
+          if (fullyBookedDates.includes(date)) {
+            dayElem.classList.add("fully-booked");
+          }
+        },
         onChange: function(selectedDates) {
           if (selectedDates.length === 2) {
             deliveryDate = selectedDates[0].toISOString().split('T')[0];
@@ -260,4 +257,43 @@
     const time = document.getElementById('timeSlot').value;
 
     if (!name || !email || !deliveryDate || !pickupDate || !time) {
-      showStatus
+      showStatus("Please complete all fields.");
+      resetSubmitButton();
+      return;
+    }
+
+    if (!isRangeAvailable(deliveryDate, pickupDate, fullyBookedDates)) {
+      showStatus("One or more selected days are fully booked. Please try a different range.");
+      resetSubmitButton();
+      return;
+    }
+
+    const data = {
+      name,
+      email,
+      delivery_date: deliveryDate,
+      pickup_date: pickupDate,
+      time
+    };
+
+    fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      mode: 'no-cors'
+    })
+    .then(() => {
+      showStatus("Booking submitted! Redirecting to payment...", 'success');
+      setTimeout(() => {
+        window.location.href = "https://square.link/u/hjhYelu2";
+      }, 2000);
+    })
+    .catch(err => {
+      console.error(err);
+      showStatus("Submission failed. Please try again later.");
+      resetSubmitButton();
+    });
+});
+</script>
+</body>
+</html>
