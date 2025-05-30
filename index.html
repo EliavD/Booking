@@ -5,54 +5,78 @@
   <title>Schedule Your Dumpster</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
-    .sl-dumpster-form {
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f2f2f2;
+    }
+
+    .form-container {
       font-family: Arial, sans-serif;
       max-width: 600px;
       margin: auto;
-      background-color: #ffffff;
-      border: 1px solid #ccc;
+      background-image: url('https://img1.wsimg.com/isteam/ip/f99872e7-ae59-4e90-b7c8-92cc9f524a51/mail.google.jpg');
+      background-size: cover;
+      background-position: center;
       border-radius: 16px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
       padding: 28px;
+      color: white;
+      position: relative;
+      border: 1px solid #ccc;
     }
 
-    .sl-dumpster-form h2 {
+    .form-container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 16px;
+      z-index: 0;
+    }
+
+    .form-container * {
+      position: relative;
+      z-index: 1;
+    }
+
+    h2 {
       text-align: center;
-      color: #007c86;
+      color: #ffffff;
       font-size: 28px;
       margin-bottom: 20px;
     }
 
-    .sl-dumpster-form label {
-      color: #004f54;
+    label {
+      color: #ffffff;
       font-weight: bold;
       margin-bottom: 6px;
       display: block;
     }
 
-    .sl-dumpster-form input,
-    .sl-dumpster-form select {
+    input, select {
       width: 100%;
       padding: 12px;
       margin-bottom: 18px;
-      border: 1px solid #999;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      background-color: #fff;
       font-size: 15px;
       box-sizing: border-box;
+      background-color: #ffffff;
+      color: #000;
     }
 
-    .sl-dumpster-form #dateRangeWrapper {
+    #dateRangeWrapper {
       display: flex;
       justify-content: center;
       margin: 24px 0;
     }
 
-    .sl-dumpster-form #dateRangePicker {
+    #dateRangePicker {
       display: inline-block;
     }
 
-    .sl-dumpster-form button {
+    button {
       width: 100%;
       padding: 14px;
       font-size: 16px;
@@ -65,11 +89,11 @@
       font-weight: bold;
     }
 
-    .sl-dumpster-form button:hover {
+    button:hover {
       background-color: #019aa3;
     }
 
-    .sl-dumpster-form button:disabled {
+    button:disabled {
       background-color: #ccc;
       cursor: not-allowed;
     }
@@ -91,7 +115,7 @@
       transform: rotate(-45deg);
     }
 
-    .sl-dumpster-form .status-message {
+    .status-message {
       padding: 12px;
       margin: 16px 0;
       border-radius: 8px;
@@ -100,13 +124,13 @@
       display: none;
     }
 
-    .sl-dumpster-form .status-success {
+    .status-success {
       background-color: #d4edda;
       color: #155724;
       border: 1px solid #c3e6cb;
     }
 
-    .sl-dumpster-form .status-error {
+    .status-error {
       background-color: #f8d7da;
       color: #721c24;
       border: 1px solid #f5c6cb;
@@ -115,7 +139,7 @@
 </head>
 <body>
 
-<div class="sl-dumpster-form">
+<div class="form-container">
   <h2>Schedule Now</h2>
   <div id="statusMessage" class="status-message"></div>
 
@@ -146,7 +170,7 @@
     <div style="margin-bottom: 16px;">
       <p style="margin-bottom: 8px;">
         Please review our
-        <a href="https://drive.google.com/file/d/1TN9TzSHGByCaQL4vJUk6XRrjJOiKAeJG/view?usp=sharing" target="_blank" style="color: #01b0bb; text-decoration: underline;">
+        <a href="https://drive.google.com/file/d/1TN9TzSHGByCaQL4vJUk6XRrjJOiKAeJG/view?usp=sharing" target="_blank" style="color: #ffffff; text-decoration: underline;">
           Rental Agreement
         </a>
         before booking.
@@ -236,43 +260,4 @@
     const time = document.getElementById('timeSlot').value;
 
     if (!name || !email || !deliveryDate || !pickupDate || !time) {
-      showStatus("Please complete all fields.");
-      resetSubmitButton();
-      return;
-    }
-
-    if (!isRangeAvailable(deliveryDate, pickupDate, fullyBookedDates)) {
-      showStatus("One or more selected days are fully booked. Please try a different range.");
-      resetSubmitButton();
-      return;
-    }
-
-    const data = {
-      name,
-      email,
-      delivery_date: deliveryDate,
-      pickup_date: pickupDate,
-      time
-    };
-
-    fetch(scriptUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      mode: 'no-cors'
-    })
-    .then(() => {
-      showStatus("Booking submitted! Redirecting to payment...", 'success');
-      setTimeout(() => {
-        window.location.href = "https://square.link/u/hjhYelu2";
-      }, 2000);
-    })
-    .catch(err => {
-      console.error(err);
-      showStatus("Submission failed. Please try again later.");
-      resetSubmitButton();
-    });
-  });
-</script>
-</body>
-</html>
+      showStatus
