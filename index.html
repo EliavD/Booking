@@ -10,6 +10,7 @@
       margin: 0;
       padding: 20px;
       background: url('https://img1.wsimg.com/isteam/ip/f99872e7-ae59-4e90-b7c8-92cc9f524a51/mail.google.jpg') center center / cover no-repeat fixed;
+      background-size: cover;
       position: relative;
     }
 
@@ -20,8 +21,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      backdrop-filter: blur(8px);
-      background-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.6);
       z-index: -1;
     }
 
@@ -63,11 +63,7 @@
     }
 
     #dateRangePicker {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(1, 176, 187, 0.4);
-      background-color: rgba(1, 176, 187, 0.05);
+      display: inline-block;
     }
 
     button {
@@ -220,15 +216,10 @@
 
       flatpickr("#dateRangePicker", {
         mode: "range",
+        inline: true,
         minDate: "today",
         dateFormat: "Y-m-d",
         disable: fullyBookedDates,
-        onDayCreate: function(dObj, dStr, fp, dayElem) {
-          const date = dayElem.dateObj.toISOString().split('T')[0];
-          if (fullyBookedDates.includes(date)) {
-            dayElem.classList.add("fully-booked");
-          }
-        },
         onChange: function(selectedDates) {
           if (selectedDates.length === 2) {
             deliveryDate = selectedDates[0].toISOString().split('T')[0];
@@ -293,7 +284,7 @@
       showStatus("Submission failed. Please try again later.");
       resetSubmitButton();
     });
-});
+  });
 </script>
 </body>
 </html>
