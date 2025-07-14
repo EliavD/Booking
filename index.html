@@ -4,126 +4,7 @@
   <meta charset="UTF-8">
   <title>Schedule Your Dumpster</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: url('https://img1.wsimg.com/isteam/ip/f99872e7-ae59-4e90-b7c8-92cc9f524a51/mail.google.jpg') center center / cover no-repeat fixed;
-      background-size: cover;
-      position: relative;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.6);
-      z-index: -1;
-    }
-
-    .form-container {
-      max-width: 600px;
-      margin: auto;
-      background-color: rgba(255, 255, 255, 0.85);
-      border: 1px solid rgba(1, 176, 187, 0.3);
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(1, 176, 187, 0.15);
-      padding: 24px;
-    }
-
-    h2 {
-      text-align: center;
-      color: #01b0bb;
-    }
-
-    label {
-      color: #01b0bb;
-      margin-bottom: 4px;
-      display: block;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(1, 176, 187, 0.4);
-      border-radius: 8px;
-      background-color: rgba(1, 176, 187, 0.05);
-      box-sizing: border-box;
-    }
-
-    #dateRangeWrapper {
-      display: flex;
-      justify-content: center;
-      margin: 24px 0;
-    }
-
-    #dateRangePicker {
-      display: inline-block;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      background-color: #01b0bb;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(1, 176, 187, 0.3);
-    }
-
-    button:hover {
-      background-color: #019aa3;
-    }
-
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-
-    .flatpickr-day.fully-booked {
-      background: #e74c3c !important;
-      color: white !important;
-      position: relative;
-    }
-
-    .flatpickr-day.fully-booked::after {
-      content: "";
-      position: absolute;
-      height: 2px;
-      background: white;
-      width: 100%;
-      top: 50%;
-      left: 0;
-      transform: rotate(-45deg);
-    }
-
-    .status-message {
-      padding: 12px;
-      margin: 16px 0;
-      border-radius: 8px;
-      text-align: center;
-      display: none;
-    }
-
-    .status-success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .status-error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -155,10 +36,10 @@
       <option value="19:00">7:00 PM – 9:00 PM</option>
     </select>
 
-    <div style="margin-bottom: 16px;">
-      <p style="margin-bottom: 8px;">
+    <div class="terms-section">
+      <p class="terms-text">
         Please review our
-        <a href="https://drive.google.com/file/d/1TN9TzSHGByCaQL4vJUk6XRrjJOiKAeJG/view?usp=sharing" target="_blank" style="color: #01b0bb; text-decoration: underline;">
+        <a href="https://drive.google.com/file/d/1TN9TzSHGByCaQL4vJUk6XRrjJOiKAeJG/view?usp=sharing" target="_blank" class="terms-link">
           Rental Agreement
         </a>
         before booking.
